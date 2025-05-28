@@ -11,7 +11,7 @@ void copiarString(char *destino, const char *origen);
 int buscarStringEnArray(const char *str, const char array[][MAX_LETTERS], int tamano);
 
 //tiempo total necesario para producir
-float tiempoTotalFabricación(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda);
+float tiempoTotalFabricacion(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda);
 
 //cantidad de recursos necesarios para producir
 void cantidadRecursosProduccionProducto(char nombre[MAX_LETTERS], char recursos[MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX_RECURSOS], int demanda, char recursos_unicos[MAX_RECURSOS][MAX_LETTERS], int *recursos_necesarios_total, int *num_recursos_unicos);
@@ -23,14 +23,17 @@ bool SuficienteParaProduccion(char nombres[MAX][MAX_LETTERS], float *tiempos_fab
                             char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, 
                             int num_recursos_disponibles, float tiempo_disponible_total);
 
+//actualizar recursos disponibles cuando se agrega un nuevo producto
+void actualizarRecursosDisponibles(char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, int *num_recursos_disponibles, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS]);
+
 //cambiar la informacion de un producto
-void cambiarInformacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS]);
+void cambiarInformacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, int *num_recursos_disponibles);
 
 //eliminar un producto
 void eliminacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS]);
 
 //funciones de ingreso
-void IngresoNombreProducto(char nombre[MAX][MAX_LETTERS], int indice);
+void IngresoNombreProducto(char nombres[MAX][MAX_LETTERS], int indice);
 void IngresoRecursosFabricacion(char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], int indice);
 void IngresoTiempoFabricacion(float *tiempos_fabricacion, int indice);
 void IngresoDemandaProducto(int *demanda, int indice);

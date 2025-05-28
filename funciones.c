@@ -4,6 +4,10 @@
 #include "funciones.h"
 #include "lecturas.h"
 
+#define MAX 5
+#define MAX_RECURSOS 10
+#define MAX_LETTERS 30
+
 //funcion para comparar dos strings
 int compararStrings(const char *str1, const char *str2) {
     int i = 0;
@@ -37,25 +41,28 @@ int buscarStringEnArray(const char *str, const char array[][MAX_LETTERS], int ta
 }
 
 //tiempo total necesario para producir
-float tiempoTotalFabricación(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda){
+float tiempoTotalFabricacion(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda){
     float tiempo_total = 0;
     float tiempo_producto = 0;
     int horas, minutos;
 
-    for(int i=0;i< MAX; i++){
+    printf("\n=== TIEMPO TOTAL DE FABRICACION ===\n");
+    
+    for(int i=0; i < MAX; i++){
         if(compararStrings(nombres[i], "") != 0) {  // Solo calcular para productos que existen
             tiempo_producto = tiempos_fabricacion[i] * demanda[i];
             tiempo_total += tiempo_producto;
             horas = (int)(tiempo_producto);
             minutos = (int)((tiempo_producto - horas) * 60);
-            printf("Producto %s \n", nombres[i]);
-            printf("Tiempo total de fabricacion del producto: %d horas y %d minutos\n", horas, minutos);
+            printf("Producto: %s\n", nombres[i]);
+            printf("Tiempo total de fabricacion del producto: %d horas y %d minutos\n\n", horas, minutos);
         }
     }
 
     horas = (int)(tiempo_total);
     minutos = (int)((tiempo_total - horas) * 60);
-    printf("\nTiempo total de fabricacion requerido: %d horas y %d minutos\n", horas, minutos);
+    printf("TIEMPO TOTAL DE FABRICACION REQUERIDO: %d horas y %d minutos\n", horas, minutos);
+    printf("======================================\n");
     return tiempo_total;
 }
 
@@ -84,13 +91,15 @@ void cantidadRecursosProduccionProducto(char nombre[MAX_LETTERS], char recursos[
 //cantidad de recursos necesarios para producir
 void cantidadRecursosProduccionTotal(char nombres[MAX][MAX_LETTERS], char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], int *demanda, int *recursos_necesarios_total){
 
-    int max_recursos = 15;
-    char recursos_unicos[MAX_RECURSOS][MAX_LETTERS] = {0}; // Array para almacenar recursos únicos
+    char recursos_unicos[MAX_RECURSOS][MAX_LETTERS]; // Array para almacenar recursos únicos
     int num_recursos_unicos = 0;
     
-    // Inicializar el array de recursos necesarios
-    for(int i = 0; i < max_recursos; i++) {
+    // Inicializar arrays
+    for(int i = 0; i < MAX_RECURSOS; i++) {
         recursos_necesarios_total[i] = 0;
+        for(int j = 0; j < MAX_LETTERS; j++) {
+            recursos_unicos[i][j] = '\0';
+        }
     }
     
     // Procesar cada producto
@@ -101,85 +110,168 @@ void cantidadRecursosProduccionTotal(char nombres[MAX][MAX_LETTERS], char recurs
         }
     }
     
-    printf("\nTotal de recursos necesarios:\n");
-    for(int k = 0; k < num_recursos_unicos; k++){
-        printf("Recurso %s: %d unidades\n", recursos_unicos[k], recursos_necesarios_total[k]);
+    printf("\n=== TOTAL DE RECURSOS NECESARIOS ===\n");
+    if(num_recursos_unicos == 0) {
+        printf("No se encontraron recursos necesarios.\n");
+    } else {
+        for(int k = 0; k < num_recursos_unicos; k++){
+            printf("Recurso %s: %d unidades\n", recursos_unicos[k], recursos_necesarios_total[k]);
+        }
     }
+    printf("=====================================\n");
 }
 
-//determinar si hay suficientes recursos para la produccion - CORREGIDA
-bool SuficienteParaProduccion(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, 
-                              char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], 
-                              char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, 
-                              int num_recursos_disponibles, float tiempo_disponible_total){
+//determinar si hay suficientes recursos para la produccion
+bool SuficienteParaProduccion(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, int num_recursos_disponibles, float tiempo_disponible_total){
     
-    float tiempo_total = tiempoTotalFabricación(nombres, tiempos_fabricacion, demanda);
+    printf("\n=== VERIFICACION DE PRODUCCION ===\n");
+    
+    float tiempo_total = 0;
+    float tiempo_producto = 0;
+    
+    // Calcular tiempo total sin mostrar detalles
+    for(int i=0; i < MAX; i++){
+        if(compararStrings(nombres[i], "") != 0) {
+            tiempo_producto = tiempos_fabricacion[i] * demanda[i];
+            tiempo_total += tiempo_producto;
+        }
+    }
+    
     int recursos_necesarios[MAX_RECURSOS] = {0};
-    char recursos_unicos[MAX_RECURSOS][MAX_LETTERS] = {0};
+    char recursos_unicos[MAX_RECURSOS][MAX_LETTERS];
     int num_recursos_unicos = 0;
+    
+    // Inicializar array de recursos únicos
+    for(int i = 0; i < MAX_RECURSOS; i++) {
+        for(int j = 0; j < MAX_LETTERS; j++) {
+            recursos_unicos[i][j] = '\0';
+        }
+    }
     
     // Calcular recursos necesarios totales
     for(int i = 0; i < MAX; i++){
-        if(compararStrings(nombres[i], "") != 0) {  // Solo procesar productos que existen
+        if(compararStrings(nombres[i], "") != 0) {
             cantidadRecursosProduccionProducto(nombres[i], recursos[i], cantidad_recursos[i], demanda[i], 
                                              recursos_unicos, recursos_necesarios, &num_recursos_unicos);
         }
     }
     
-    // Debug: Mostrar recursos únicos necesarios
-    printf("\nRecursos unicos necesarios encontrados:\n");
-    for(int i = 0; i < num_recursos_unicos; i++){
-        printf("- %s: %d unidades\n", recursos_unicos[i], recursos_necesarios[i]);
-    }
+    // Mostrar información de tiempo
+    int horas_necesarias = (int)tiempo_total;
+    int minutos_necesarios = (int)((tiempo_total - horas_necesarias) * 60);
+    int horas_disponibles = (int)tiempo_disponible_total;
+    int minutos_disponibles_calc = (int)((tiempo_disponible_total - horas_disponibles) * 60);
     
-    // Debug: Mostrar recursos disponibles
-    printf("\nRecursos disponibles:\n");
-    for(int i = 0; i < num_recursos_disponibles; i++){
-        printf("- %s: %d unidades\n", recursos_unicos_disponibles[i], recursos_disponibles[i]);
-    }
+    printf("Tiempo necesario: %d horas y %d minutos\n", horas_necesarias, minutos_necesarios);
+    printf("Tiempo disponible: %d horas y %d minutos\n", horas_disponibles, minutos_disponibles_calc);
     
-    // Mostrar información de comparación
+    // Mostrar comparación de recursos
     printf("\nComparacion de recursos:\n");
+    bool recursos_suficientes = true;
     
-    // Verificar si hay suficientes recursos
     for(int i = 0; i < num_recursos_unicos; i++){
         // Buscar el índice del recurso en el array de recursos disponibles
         int indice_disponible = buscarStringEnArray(recursos_unicos[i], recursos_unicos_disponibles, num_recursos_disponibles);
         
         if(indice_disponible == -1){
-            printf("Error: No se encontró el recurso '%s' en la lista de recursos disponibles\n", recursos_unicos[i]);
-            return false;
-        }
-        
-        printf("Recurso %s: Necesarios=%d, Disponibles=%d\n", 
-               recursos_unicos[i], recursos_necesarios[i], recursos_disponibles[indice_disponible]);
-        
-        if(recursos_necesarios[i] > recursos_disponibles[indice_disponible]){
-            printf("No hay suficientes recursos de %s\n", recursos_unicos[i]);
-            printf("Se necesitan %d unidades, pero solo hay %d disponibles\n", 
-                   recursos_necesarios[i], recursos_disponibles[indice_disponible]);
-            return false;
+            printf("ERROR: No se encontro el recurso '%s' en la lista de recursos disponibles\n", recursos_unicos[i]);
+            recursos_suficientes = false;
+        } else {
+            printf("Recurso %s: Necesarios=%d, Disponibles=%d", 
+                   recursos_unicos[i], recursos_necesarios[i], recursos_disponibles[indice_disponible]);
+            
+            if(recursos_necesarios[i] > recursos_disponibles[indice_disponible]){
+                printf(" - INSUFICIENTE\n");
+                recursos_suficientes = false;
+            } else {
+                printf(" - SUFICIENTE\n");
+            }
         }
     }
     
-    // Verificar si hay suficiente tiempo
-    if(tiempo_total > tiempo_disponible_total){
-        printf("No hay suficiente tiempo disponible\n");
-        printf("Se necesitan %.2f horas, pero solo hay %.2f horas disponibles\n", 
+    // Verificar tiempo
+    bool tiempo_suficiente = (tiempo_total <= tiempo_disponible_total);
+    if(!tiempo_suficiente) {
+        printf("\nTIEMPO INSUFICIENTE: Se necesitan %.2f horas, pero solo hay %.2f horas disponibles\n", 
                tiempo_total, tiempo_disponible_total);
-        return false;
     }
     
-    printf("Hay suficientes recursos y tiempo para la producción\n");
-    return true;
+    printf("===================================\n");
+    
+    return recursos_suficientes && tiempo_suficiente;
+}
+
+//actualizar recursos disponibles cuando se agrega un nuevo producto
+void actualizarRecursosDisponibles(char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, int *num_recursos_disponibles, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS]){
+    
+    char recursos_faltantes[MAX_RECURSOS][MAX_LETTERS];
+    int num_faltantes = 0;
+    
+    // Inicializar array de recursos faltantes
+    for(int i = 0; i < MAX_RECURSOS; i++) {
+        for(int j = 0; j < MAX_LETTERS; j++) {
+            recursos_faltantes[i][j] = '\0';
+        }
+    }
+    
+    // Encontrar recursos que están en productos pero no en disponibles
+    for(int i = 0; i < MAX; i++){
+        for(int j = 0; j < MAX_RECURSOS; j++){
+            if(compararStrings(recursos[i][j], "") != 0) {
+                // Verificar si este recurso ya está en disponibles
+                int indice_disponible = buscarStringEnArray(recursos[i][j], recursos_unicos_disponibles, *num_recursos_disponibles);
+                if(indice_disponible == -1){
+                    // Verificar si ya está en la lista de faltantes
+                    int indice_faltante = buscarStringEnArray(recursos[i][j], recursos_faltantes, num_faltantes);
+                    if(indice_faltante == -1 && num_faltantes < MAX_RECURSOS){
+                        copiarString(recursos_faltantes[num_faltantes], recursos[i][j]);
+                        num_faltantes++;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Si hay recursos faltantes, pedirlos al usuario
+    if(num_faltantes > 0){
+        printf("\nSe detectaron nuevos recursos que no estaban en la lista de disponibles:\n");
+        for(int i = 0; i < num_faltantes; i++){
+            if(*num_recursos_disponibles < MAX_RECURSOS) {
+                printf("Recurso nuevo: %s\n", recursos_faltantes[i]);
+                
+                // Agregar a la lista de disponibles
+                copiarString(recursos_unicos_disponibles[*num_recursos_disponibles], recursos_faltantes[i]);
+                recursos_disponibles[*num_recursos_disponibles] = ReaderIntValueGreater("Ingrese la cantidad disponible: ", 0);
+                (*num_recursos_disponibles)++;
+            }
+        }
+        printf("\nRecursos disponibles actualizados.\n");
+    } else {
+        printf("No se detectaron nuevos recursos.\n");
+    }
 }
 
 //cambiar la informacion de un producto
-void cambiarInformacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS]){
+void cambiarInformacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, int *num_recursos_disponibles){
     
     char nombre_buscar[MAX_LETTERS];
     int encontrado = -1;
     int opcion;
+    
+    // Mostrar productos existentes
+    printf("\nProductos disponibles:\n");
+    bool hay_productos = false;
+    for(int i = 0; i < MAX; i++){
+        if(compararStrings(nombres[i], "") != 0){
+            printf("- %s\n", nombres[i]);
+            hay_productos = true;
+        }
+    }
+    
+    if(!hay_productos) {
+        printf("No hay productos registrados.\n");
+        return;
+    }
     
     printf("\nIngrese el nombre del producto a editar: ");
     scanf("%s", nombre_buscar);
@@ -220,6 +312,7 @@ void cambiarInformacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_f
             break;
         case 4:
             IngresoRecursosFabricacion(recursos, cantidad_recursos, encontrado);
+            actualizarRecursosDisponibles(recursos_unicos_disponibles, recursos_disponibles, num_recursos_disponibles, recursos);
             break;
         case 5:
             printf("\nModificacion cancelada\n");
@@ -233,6 +326,21 @@ void cambiarInformacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_f
 void eliminacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS]){
     char nombre_buscar[MAX_LETTERS];
     int encontrado = -1;
+    
+    // Mostrar productos existentes
+    printf("\nProductos disponibles:\n");
+    bool hay_productos = false;
+    for(int i = 0; i < MAX; i++){
+        if(compararStrings(nombres[i], "") != 0){
+            printf("- %s\n", nombres[i]);
+            hay_productos = true;
+        }
+    }
+    
+    if(!hay_productos) {
+        printf("No hay productos registrados para eliminar.\n");
+        return;
+    }
     
     printf("\nIngrese el nombre del producto a eliminar: ");
     scanf("%s", nombre_buscar);
@@ -250,6 +358,15 @@ void eliminacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricac
         return;
     }
     
+    // Confirmar eliminación
+    printf("\n¿Esta seguro de que desea eliminar el producto '%s'? (1=Si, 0=No): ", nombres[encontrado]);
+    int confirmacion = ReaderIntValueBetween("", 0, 1);
+    
+    if(confirmacion == 0) {
+        printf("\nEliminacion cancelada\n");
+        return;
+    }
+    
     // Eliminar producto
     copiarString(nombres[encontrado], "");
     tiempos_fabricacion[encontrado] = 0;
@@ -263,12 +380,12 @@ void eliminacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricac
 }
 
 //ingreso nombre del producto
-void IngresoNombreProducto(char nombre[MAX][MAX_LETTERS], int indice){
+void IngresoNombreProducto(char nombres[MAX][MAX_LETTERS], int indice){
     printf("Ingrese el nombre del producto: ");
-    scanf("%s", nombre[indice]);
+    scanf("%s", nombres[indice]);
 }
 
-//ingreso recursos de fabricación del producto - CORREGIDA
+//ingreso recursos de fabricación del producto
 void IngresoRecursosFabricacion(char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], int indice){
     int num_recursos;
     
@@ -278,8 +395,7 @@ void IngresoRecursosFabricacion(char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], i
         cantidad_recursos[indice][i] = 0;
     }
     
-    printf("Ingrese el numero de recursos necesarios (maximo %d): ", MAX_RECURSOS);
-    num_recursos = ReaderIntValueBetween("", 1, MAX_RECURSOS);
+    num_recursos = ReaderIntValueBetween("Ingrese el numero de recursos necesarios (maximo 10): ", 1, MAX_RECURSOS);
     
     for(int i = 0; i < num_recursos; i++){
         printf("\nRecurso %d:\n", i+1);
@@ -303,7 +419,7 @@ void IngresoDemandaProducto(int *demanda, int indice){
     demanda[indice] = ReaderIntValueGreater("Ingrese la cantidad demandada: ", 0);
 }
 
-//ingreso recursos disponibles - CORREGIDA
+//ingreso recursos disponibles
 int IngresoRecursosDisponibles(char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS]){
     int num_recursos_unicos = 0;
     
@@ -316,7 +432,7 @@ int IngresoRecursosDisponibles(char recursos_unicos_disponibles[MAX_RECURSOS][MA
     // Encontrar todos los recursos únicos utilizados en los productos
     for(int i = 0; i < MAX; i++){
         for(int j = 0; j < MAX_RECURSOS; j++){
-            if(compararStrings(recursos[i][j], "") != 0) {
+            if(compararStrings(recursos[i][j], "") != 0 && num_recursos_unicos < MAX_RECURSOS) {
                 // Verificar si este recurso ya está en la lista de únicos
                 int indice_existente = buscarStringEnArray(recursos[i][j], recursos_unicos_disponibles, num_recursos_unicos);
                 if(indice_existente == -1){
@@ -328,14 +444,19 @@ int IngresoRecursosDisponibles(char recursos_unicos_disponibles[MAX_RECURSOS][MA
         }
     }
     
+    if(num_recursos_unicos == 0) {
+        printf("\nNo se encontraron recursos en los productos registrados.\n");
+        return 0;
+    }
+    
     // Solicitar cantidades disponibles
     printf("\nIngrese la cantidad disponible de cada recurso:\n");
     for(int i = 0; i < num_recursos_unicos; i++){
-        printf("Recurso %s: ", recursos_unicos_disponibles[i]);
-        recursos_disponibles[i] = ReaderIntValueGreater("", 0);
+        recursos_disponibles[i] = ReaderIntValueGreater(
+            (printf("Recurso %s: ", recursos_unicos_disponibles[i]), ""), 0);
     }
     
-    return num_recursos_unicos; // Retornar el número de recursos únicos encontrados
+    return num_recursos_unicos;
 }
 
 //ingreso tiempo disponible de fabricacion

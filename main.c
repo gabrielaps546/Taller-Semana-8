@@ -2,26 +2,11 @@
 #include <stdbool.h>
 #include <string.h>
 #include "funciones.h"
+#include "lecturas.h"
 
 #define MAX 5
 #define MAX_RECURSOS 10
 #define MAX_LETTERS 30
-
-float tiempoTotalFabricación(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda);
-void cantidadRecursosProduccionTotal(char nombres[MAX][MAX_LETTERS], char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], int *demanda, int *recursos_necesarios_total);
-bool SuficienteParaProduccion(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, 
-                            char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], 
-                            char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, 
-                            int num_recursos_disponibles, float tiempo_disponible_total);
-void cambiarInformacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS]);
-void eliminacionProducto(char nombres[MAX][MAX_LETTERS], float *tiempos_fabricacion, int *demanda, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS]);
-void IngresoNombreProducto(char nombre[MAX][MAX_LETTERS], int indice);
-void IngresoRecursosFabricacion(char recursos[MAX][MAX_RECURSOS][MAX_LETTERS], int cantidad_recursos[MAX][MAX_RECURSOS], int indice);
-void IngresoTiempoFabricacion(float *tiempos_fabricacion, int indice);
-void IngresoDemandaProducto(int *demanda, int indice);
-int IngresoRecursosDisponibles(char recursos_unicos_disponibles[MAX_RECURSOS][MAX_LETTERS], int *recursos_disponibles, char recursos[MAX][MAX_RECURSOS][MAX_LETTERS]);
-void IngresoTiempoDisponible(int *horas, int *minutos);
-int compararStrings(const char *str1, const char *str2);
 
 int main() {
     char nombres[MAX][MAX_LETTERS] = {""};
@@ -38,6 +23,25 @@ int main() {
     int num_recursos_disponibles = 0;
     int opcion;
 
+    // Inicializar arrays de strings
+    for (int i = 0; i < MAX; i++) {
+        for (int j = 0; j < MAX_LETTERS; j++) {
+            nombres[i][j] = '\0';
+        }
+        for (int j = 0; j < MAX_RECURSOS; j++) {
+            for (int k = 0; k < MAX_LETTERS; k++) {
+                recursos[i][j][k] = '\0';
+            }
+        }
+    }
+    
+    for (int i = 0; i < MAX_RECURSOS; i++) {
+        for (int j = 0; j < MAX_LETTERS; j++) {
+            recursos_unicos_disponibles[i][j] = '\0';
+        }
+    }
+
+    // Ingreso inicial de datos
     for (int i = 0; i < MAX; i++) {
         printf("\n--- Ingreso de datos para producto %d ---\n", i + 1);
         IngresoNombreProducto(nombres, i);
@@ -58,10 +62,12 @@ int main() {
         printf("4. Mostrar tiempo total de fabricacion\n");
         printf("5. Mostrar recursos necesarios\n");
         printf("6. Verificar si se puede cumplir con la demanda\n");
-        printf("7. Salir\n");
+        printf("7. Actualizar recursos disponibles\n");
+        printf("8. Actualizar tiempo disponible\n");
+        printf("9. Salir\n");
         printf("Seleccione una opcion: ");
 
-        while (scanf("%d", &opcion) != 1 || opcion < 0 || opcion > 7) {
+        while (scanf("%d", &opcion) != 1 || opcion < 0 || opcion > 9) {
             printf("Ingrese una opcion valida: ");
             while (getchar() != '\n');
         }
@@ -82,17 +88,21 @@ int main() {
                     IngresoTiempoFabricacion(tiempos_fabricacion, indice);
                     IngresoDemandaProducto(demanda, indice);
                     IngresoRecursosFabricacion(recursos, cantidad_recursos, indice);
+                    
+                    printf("\nVerificando si hay nuevos recursos...\n");
+                    actualizarRecursosDisponibles(recursos_unicos_disponibles, recursos_disponibles, &num_recursos_disponibles, recursos);
                 }
                 break;
             }
             case 2:
-                cambiarInformacionProducto(nombres, tiempos_fabricacion, demanda, recursos, cantidad_recursos);
+                cambiarInformacionProducto(nombres, tiempos_fabricacion, demanda, recursos, cantidad_recursos,
+                                         recursos_unicos_disponibles, recursos_disponibles, &num_recursos_disponibles);
                 break;
             case 3:
                 eliminacionProducto(nombres, tiempos_fabricacion, demanda, recursos, cantidad_recursos);
                 break;
             case 4:
-                tiempoTotalFabricación(nombres, tiempos_fabricacion, demanda);
+                tiempoTotalFabricacion(nombres, tiempos_fabricacion, demanda);
                 break;
             case 5:
                 cantidadRecursosProduccionTotal(nombres, recursos, cantidad_recursos, demanda, recursos_necesarios_total);
@@ -109,11 +119,21 @@ int main() {
                 break;
             }
             case 7:
+                printf("\nActualizando recursos disponibles...\n");
+                num_recursos_disponibles = IngresoRecursosDisponibles(recursos_unicos_disponibles, recursos_disponibles, recursos);
+                printf("Recursos disponibles actualizados.\n");
+                break;
+            case 8:
+                printf("\nActualizando tiempo disponible...\n");
+                IngresoTiempoDisponible(&horas_disponibles, &minutos_disponibles);
+                tiempo_disponible_total = horas_disponibles + ((float)minutos_disponibles / 60.0);
+                printf("Tiempo disponible actualizado.\n");
+                break;
+            case 9:
                 printf("Saliendo del programa.\n");
                 break;
         }
-    } while (opcion != 7);
+    } while (opcion != 9);
 
     return 0;
 }
-
